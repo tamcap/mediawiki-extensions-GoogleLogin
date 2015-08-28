@@ -18,6 +18,7 @@
 		 * @return Google_Client
 		 */
 		public function getClient() {
+
 			if ( empty( $this->mGoogleClient ) ) {
 				$client = $this->includeAPIFiles();
 				$this->mGoogleClient = $this->prepareClient(
@@ -441,12 +442,17 @@
 		 * @return Google_Client A prepared instance of Google Client class
 		 */
 		private function prepareClient( $client, $redirectURI ) {
+			global $wgGLAuthAdapter, $wgGLOAuth2Scopes;
 			$glConfig = $this->getGLConfig();
 			$client->setClientId( $glConfig->get( 'GLAppId' ) );
 			$client->setClientSecret( $glConfig->get( 'GLSecret' ) );
 			$client->setRedirectUri( WebRequest::detectServer().$redirectURI );
-			$client->addScope( "https://www.googleapis.com/auth/userinfo.profile" );
-			$client->addScope( "https://www.googleapis.com/auth/userinfo.email" );
+			if (isset($wgGLAuthAdapter)) {
+				$client->setAuth(new $wgGLAuthAdapter($client));
+			}
+			foreach ($wgGLOAuth2Scopes as $scope) {
+				$client->addScope($scope);
+			}
 			return $client;
 		}
 

@@ -15,6 +15,7 @@
 		 * @param SubPage $par Subpage submitted to this Special page.
 		 */
 		function execute( $par ) {
+			global $wgGLUserInfoEndpoint;
 			if ( session_id() == '' ) {
 				wfSetupSession();
 			}
@@ -42,7 +43,19 @@
 					$client->authenticate( $request->getVal( 'code' ) );
 					$request->setSessionData( 'access_token', $client->getAccessToken() );
 					try {
-						$userInfo = $plus->people->get("me");
+						$ac = json_decode($client->getAccessToken(), true);
+						$ac = $ac['access_token'];
+						$curl = curl_init($wgGLUserInfoEndpoint);
+						curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: Bearer $ac"]);
+						curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+						$result = curl_exec ($curl);
+						curl_close ($curl);
+						$userInfo = json_decode($result, true);
+						if (!isset($userInfo['id'])) {
+							$request->setSessionData( 'access_token', null);
+							throw new Exception($result);
+						}
+						// $userInfo = $plus->people->get("me");
 					} catch ( Exception $e ) {
 						$this->createError( $e->getMessage() );
 						return;
@@ -64,7 +77,18 @@
 						$this->finishAction( $par, $client, $plus, $db );
 					} else {
 						try {
-							$userInfo = $plus->people->get("me");
+							$ac = json_decode($client->getAccessToken(), true);
+							$ac = $ac['access_token'];
+							$curl = curl_init($wgGLUserInfoEndpoint);
+							curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: Bearer $ac"]);
+							curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+							$result = curl_exec ($curl);
+    						curl_close ($curl);
+							$userInfo = json_decode($result, true);
+							if (!isset($userInfo['id'])) {
+								$request->setSessionData( 'access_token', null);
+								throw new Exception($result);
+							}
 						} catch ( Exception $e ) {
 							$this->createError( $e->getMessage() );
 							return;
@@ -75,10 +99,10 @@
 								'Google-ID', $userInfo['id']
 							),
 							array(
-								$this->msg( 'googlelogin-googleuser' )->text(), $userInfo['displayName']
+								$this->msg( 'googlelogin-googleuser' )->text(), $userInfo['name']
 							),
 							array(
-								$this->msg( 'googlelogin-email' )->text(), $userInfo['emails'][0]['value']
+								$this->msg( 'googlelogin-email' )->text(), $userInfo['email']
 							),
 							array(
 								$this->msg( 'googlelogin-linkstatus' )->text(),
@@ -129,7 +153,7 @@
 			$googleIdExists = $db->googleIdExists( $userInfo['id'] );
 			if (
 				$this->mGoogleLogin->isValidDomain(
-					$userInfo['emails'][0]['value']
+					$userInfo['email']
 				)
 			) {
 				if ( !$googleIdExists ) {
@@ -173,7 +197,7 @@
 				$out->addWikiMsg(
 					'googlelogin-unallowed-domain',
 					$this->mGoogleLogin->getHost(
-						$userInfo['emails'][0]['value']
+						$userInfo['email']
 					)
 				);
 			}
@@ -189,12 +213,12 @@
 			$request = $this->getRequest();
 			$this->getOutput()->setPageTitle( $this->msg( 'googlelogin-form-choosename-title' )->text() );
 			$names = array();
-			if ( GoogleLogin::isValidUsername( $userInfo['displayName'] ) ) {
-				$names[$userInfo['displayName']] = 'wpDisplayName';
+			if ( GoogleLogin::isValidUsername( $userInfo['name'] ) ) {
+				$names[$userInfo['name']] = 'wpDisplayName';
 			}
-			if ( GoogleLogin::isValidUsername( $userInfo['name']['givenName'] ) ) {
-				$names[$userInfo['name']['givenName']] = 'wpGivenName';
-			}
+			// if ( GoogleLogin::isValidUsername( $userInfo['name']['givenName'] ) ) {
+			// 	$names[$userInfo['name']] = 'wpGivenName';
+			// }
 			$names[$this->msg( 'googlelogin-form-chooseown' )->text() . ':'] = 'wpOwn';
 			$defaultName = ($request->getVal( 'wpChooseName' ) !== null ?
 				$request->getVal( 'wpChooseName' ) : 'wpOwn');
@@ -278,13 +302,25 @@
 		 * - Unlink Wiki and Google account (Unlink)
 		 */
 		private function finishAction( $par, $client, $plus, $db ) {
+			global $wgGLUserInfoEndpoint;
 			$glConfig = $this->mGoogleLogin->getGLConfig();
 			// prepare MediaWiki variables/classes we need
 			$out = $this->getOutput();
 			$request = $this->getRequest();
 			// get userinfos of google plus api result
 			try {
-				$userInfo = $plus->people->get("me");
+				$ac = json_decode($client->getAccessToken(), true);
+				$ac = $ac['access_token'];
+				$curl = curl_init($wgGLUserInfoEndpoint);
+				curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: Bearer $ac"]);
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+				$result = curl_exec ($curl);
+				curl_close ($curl);
+				$userInfo = json_decode($result, true);
+				if (!isset($userInfo['id'])) {
+					throw new Exception($result);
+				}
+				// $userInfo = $plus->people->get("me");
 			} catch ( Exception $e ) {
 				$this->createError( $e->getMessage() );
 				return;
@@ -316,15 +352,15 @@
 							}
 						}
 						if ( $request->getVal( 'wpChooseName' ) === 'wpDisplayName' ) {
-							if ( GoogleLogin::isValidUsername( $userInfo['displayName'] ) ) {
-								$userName = $userInfo['displayName'];
+							if ( GoogleLogin::isValidUsername( $userInfo['name'] ) ) {
+								$userName = $userInfo['name'];
 							} else {
 								$this->createGoogleUserForm( $userInfo, $db );
 							}
 						}
 						if ( $request->getVal( 'wpChooseName' ) === 'wpGivenName' ) {
-							if ( GoogleLogin::isValidUsername( $userInfo['name']['givenName'] ) ) {
-								$userName = $userInfo['name']['givenName'];
+							if ( GoogleLogin::isValidUsername( $userInfo['name'] ) ) {
+								$userName = $userInfo['name'];
 							} else {
 								$this->createGoogleUserForm( $userInfo, $db );
 							}
@@ -333,8 +369,8 @@
 							$out->setPageTitle( $this->msg( 'googlelogin-form-choosename-finish-title' )->text() );
 							$userParam = array(
 								'password' => md5( Rand() ),
-								'email' => $userInfo['emails'][0]['value'],
-								'real_name' => $userInfo['name']['givenName']
+								'email' => $userInfo['email'],
+								'real_name' => $userInfo['name']
 							);
 							if ( !$db->googleIdExists( $userInfo['id'] ) ) {
 								$user = User::createNew( $userName, $userParam );

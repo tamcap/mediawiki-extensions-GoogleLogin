@@ -6,9 +6,10 @@
 			$res = $dbr->select(
 				"user_google_user",
 				array( 'user_id' ),
-				'user_googleid = ' . $googleId,
+				"user_googleid =  '$googleId'" ,
 				__METHOD__
 			);
+
 			// $res might be null if the table user_fbconnect wasn't created
 			$userId = array();
 			if ( $res === 0 ) {

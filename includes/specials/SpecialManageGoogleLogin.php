@@ -107,6 +107,7 @@
 				if ( !is_numeric( $googleId ) ) {
 					$out->wrapWikiMsg( '<div class="error">$1</div>', 'googlelogin-manage-invalidid' );
 				} else {
+					var_dump($googleId);die();
 					// check, if the google id has a google plus profile
 					$glConfig = ConfigFactory::getDefaultInstance()->makeConfig( 'googlelogin' );
 					$plusCheck = Http::get(
