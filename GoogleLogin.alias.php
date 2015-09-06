@@ -11,6 +11,7 @@ $specialPageAliases = array();
 $specialPageAliases['en'] = array(
 	'GoogleLogin' => array( 'GoogleLogin', 'Login with Google' ),
 	'ManageGoogleLogin' => array( 'ManageGoogleLogin', 'Manage GoogleLogin connections' ),
+	'ManageExplicitlyAllowed' => array( 'ManageExplicitlyAllowed', 'Manage Explicitly Allowed e-mails' ),
 );
 
 /** Arabic (العربية) */

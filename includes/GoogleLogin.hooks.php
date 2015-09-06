@@ -19,7 +19,7 @@
 				return true;
 			}
 			// Tables to add to the database
-			$tables = array( 'user_google_user' );
+			$tables = array( 'user_google_user', 'user_google_explicitly_allowed');
 			// Sql directory inside the extension folder
 			$sql = dirname( __FILE__ ) . '/sql';
 			// Extension of the table schema file (depending on the database type)

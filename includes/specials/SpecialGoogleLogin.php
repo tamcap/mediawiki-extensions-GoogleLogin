@@ -154,6 +154,9 @@
 			if (
 				$this->mGoogleLogin->isValidDomain(
 					$userInfo['email']
+				) ||
+				$this->mGoogleLogin->isExplicitlyAllowed(
+					$userInfo['email']
 				)
 			) {
 				if ( !$googleIdExists ) {

@@ -51,6 +51,7 @@
 	$wgAutoloadClasses[ 'GoogleLogin' ] = $dir . '/includes/GoogleLogin.body.php';
 	$wgAutoloadClasses[ 'SpecialGoogleLogin' ] = $dir . '/includes/specials/SpecialGoogleLogin.php';
 	$wgAutoloadClasses[ 'SpecialManageGoogleLogin' ] = $dir . '/includes/specials/SpecialManageGoogleLogin.php';
+	$wgAutoloadClasses[ 'SpecialManageExplicitlyAllowed' ] = $dir . '/includes/specials/SpecialManageExplicitlyAllowed.php';
 	$wgAutoloadClasses[ 'GoogleLoginHooks' ] = $dir . '/includes/GoogleLogin.hooks.php';
 	$wgAutoloadClasses[ 'GoogleLoginDB' ] = $dir . '/includes/GoogleLoginDB.php';
 	$wgAutoloadClasses[ 'GoogleLoginAuth' ] = $dir . '/includes/GoogleLoginAuth.php';
@@ -74,10 +75,13 @@
 	// new user rights for this extension
 	$wgGroupPermissions['sysop']['managegooglelogin'] = true;
 	$wgAvailableRights[] = 'managegooglelogin';
+	$wgGroupPermissions['sysop']['manageexplicitlyallowed'] = true;
+	$wgAvailableRights[] = 'manageexplicitlyallowed';
 
 	// Special Page
 	$wgSpecialPages[ 'GoogleLogin' ] = 'SpecialGoogleLogin';
 	$wgSpecialPages[ 'ManageGoogleLogin' ] = 'SpecialManageGoogleLogin';
+	$wgSpecialPages[ 'ManageExplicitlyAllowed' ] = 'SpecialManageExplicitlyAllowed';
 
 	// API Modules
 	$wgAPIModules['googleplusprofileinfo'] = 'ApiGoogleLoginInfo';

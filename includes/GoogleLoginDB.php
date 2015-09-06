@@ -1,5 +1,81 @@
 <?php
 	class GoogleLoginDB {
+		public function getExplicitlyAllowedEmails($db = DB_SLAVE ) {
+			$dbr = wfGetDB( $db, array(), self::sharedDB() );
+			$prefix = self::getPrefix();
+
+			$res = $dbr->select(
+				"{$prefix}user_google_explicitly_allowed",
+				array( 'user_email' ),
+				null,
+				__METHOD__
+			);
+
+			// $res might be null if the table user_fbconnect wasn't created
+			if ( $res === 0 ) {
+				return false;
+			}
+			$emails = [];
+			foreach($res as $row) {
+				$emails[] = $row->user_email;
+			}
+			return $emails;
+		}
+
+		public function isExplicitlyAllowed( $emailAddress, $db = DB_SLAVE ) {
+			$dbr = wfGetDB( $db, array(), self::sharedDB() );
+			$prefix = self::getPrefix();
+
+			$res = $dbr->select(
+				"{$prefix}user_google_explicitly_allowed",
+				array( 'user_email' ),
+				"user_email = '$emailAddress'" ,
+				__METHOD__
+			);
+
+			// $res might be null if the table user_fbconnect wasn't created
+			if ( $res === 0 ) {
+				return false;
+			}
+
+			return (bool) $res->result->num_rows;
+		}
+
+		public function disallowEmail($emailAddress) {
+			$dbr = wfGetDB( DB_MASTER );
+			$prefix = self::getPrefix();
+			if (
+				$dbr->delete(
+					"{$prefix}user_google_explicitly_allowed",
+					"user_email= '{$emailAddress}'",
+					__METHOD__
+				)
+			) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		public function allowEmail($emailAddress) {
+			$dbr = wfGetDB( DB_MASTER );
+			$prefix = self::getPrefix();
+			if (
+				$dbr->insert(
+					"{$prefix}user_google_explicitly_allowed",
+					array(
+						'user_email' => $emailAddress,
+					),
+					__METHOD__,
+					array( 'IGNORE' )
+				)
+			) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		public function googleIdExists( $googleId, $db = DB_SLAVE ) {
 			$dbr = wfGetDB( $db, array(), self::sharedDB() );
 			$prefix = self::getPrefix();

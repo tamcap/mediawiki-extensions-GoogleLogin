@@ -211,6 +211,17 @@
 		 * @param string $mailDomain The domain of email address
 		 * @return boolean
 		 */
+		public function isExplicitlyAllowed( $emailAddress ) {
+			$db = new GoogleLoginDB;
+
+			return $db->isExplicitlyAllowed($emailAddress);
+		}
+
+		/**
+		 * If restriction of domains is enabled, check if the user E-Mail is valid before do anything.
+		 * @param string $mailDomain The domain of email address
+		 * @return boolean
+		 */
 		public function isValidDomain( $mailDomain ) {
 			$glConfig = $this->getGLConfig();
 			if ( is_array( $glConfig->get( 'GLAllowedDomains' ) ) ) {
